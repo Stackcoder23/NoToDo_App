@@ -38,31 +38,41 @@ class _NoToDoScreenState extends State<NoToDoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black87,
-      body: Column(
+      body:
+      itemList.isEmpty
+          ? Center(
+        child: Text(
+          "Empty",
+          style: TextStyle(color: Colors.white),
+        ),
+      )
+          :
+      Column(
         children: [
-          Flexible(
-              child: ListView.builder(
-                  padding: EdgeInsets.all(8),
-                  reverse: false,
-                  itemCount: itemList.length,
-                  itemBuilder: (_, int index) {
-                    return Card(
-                      color: Colors.white10,
-                      child: ListTile(
-                        title: itemList[index],
-                        onLongPress: () => _updateNoDo(itemList[index], index),
-                        trailing: Listener(
-                          key: Key(itemList[index].itemName),
-                          child: Icon(
-                            Icons.remove_circle_outline,
-                            color: Colors.red,
+           Flexible(
+                  child: ListView.builder(
+                      padding: EdgeInsets.all(8),
+                      reverse: false,
+                      itemCount: itemList.length,
+                      itemBuilder: (_, int index) {
+                        return Card(
+                          color: Colors.white10,
+                          child: ListTile(
+                            title: itemList[index],
+                            onLongPress: () =>
+                                _updateNoDo(itemList[index], index),
+                            trailing: Listener(
+                              key: Key(itemList[index].itemName),
+                              child: Icon(
+                                Icons.remove_circle_outline,
+                                color: Colors.red,
+                              ),
+                              onPointerDown: (pointerEvent) =>
+                                  _deleteNoDo(itemList[index].id),
+                            ),
                           ),
-                          onPointerDown: (pointerEvent) =>
-                            _deleteNoDo(itemList[index].id),
-                        ),
-                      ),
-                    );
-                  })),
+                        );
+                      })),
           Divider(
             height: 1,
           )
@@ -115,24 +125,26 @@ class _NoToDoScreenState extends State<NoToDoScreen> {
     itemList.clear();
     items.forEach((item) {
       setState(() {
-          itemList.add(NoDoItem.map(item));
+        itemList.add(NoDoItem.map(item));
       });
       // NoDoItem noDoItem = NoDoItem.map(item);
       // print("Db Items: ${noDoItem.itemName}");
     });
   }
 
-  _deleteNoDo(int id) async{
+  _deleteNoDo(int id) async {
     await db.deleteItem(id);
     _readNoDoList();
+    (context as Element).reassemble();
   }
 
-  _updateNoDo(NoDoItem itemList, int index) async{
+  _updateNoDo(NoDoItem itemList, int index) async {
     var alert = new AlertDialog(
       title: Text("Update Item"),
       content: Row(
         children: [
-          Expanded(child: TextField(
+          Expanded(
+              child: TextField(
             controller: _textEditingController,
             autofocus: true,
             decoration: InputDecoration(
@@ -146,26 +158,25 @@ class _NoToDoScreenState extends State<NoToDoScreen> {
       actions: [
         TextButton(
             onPressed: () async {
-              NoDoItem itemUpdated = NoDoItem.fromMap(
-                { "itemName": _textEditingController.text,
-                  "dateCreated": DateTime.now().toIso8601String(),
-                  "id": itemList.id,
-                }
-              );
+              NoDoItem itemUpdated = NoDoItem.fromMap({
+                "itemName": _textEditingController.text,
+                "dateCreated": DateTime.now().toIso8601String(),
+                "id": itemList.id,
+              });
               await db.updateItem(itemUpdated);
               _readNoDoList();
               _textEditingController.clear();
               Navigator.pop(context);
-            } ,
+            },
             child: Text("Update")),
         TextButton(
             onPressed: () => Navigator.pop(context), child: Text("Cancel"))
       ],
     );
-    showDialog(context: context, builder: (_){
-      return alert;
-    });
-
+    showDialog(
+        context: context,
+        builder: (_) {
+          return alert;
+        });
   }
-
 }
